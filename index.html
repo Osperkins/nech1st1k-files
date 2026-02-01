@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎤 Голосовые друга</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --favorite-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --random-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --dark-bg: #2d2d3a;
+            --card-bg: #3a3a4a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--text-primary);
+        }
+
+        .app-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 30px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: var(--primary-gradient);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            color: #2d2d3a;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-box input:focus {
+            border-color: #667eea;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+        }
+
+        .btn-favorite {
+            background: var(--favorite-gradient);
+        }
+
+        .btn-random {
+            background: var(--random-gradient);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border: none;
+            background: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #888;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .voice-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .voice-button {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 18px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .voice-button i {
+            font-size: 24px;
+        }
+
+        .voice-button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 18px rgba(102, 126, 234, 0.5);
+        }
+
+        .voice-button:active {
+            transform: translateY(1px);
+        }
+
+        .voice-button.playing {
+            background: var(--favorite-gradient);
+            animation: pulse 0.6s ease-in-out;
+        }
+
+        .voice-button.favorite {
+            background: var(--favorite-gradient);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .player-container {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .now-playing {
+            font-size: 14px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        audio {
+            width: 100%;
+            outline: none;
+            height: 40px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px dashed #e0e0e0;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: var(--favorite-gradient);
+            color: white;
+            border-radius: 50px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            font-weight: 600;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 600px) {
+            .voice-grid {
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .control-buttons {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .header h1 {
+                font-size: 26px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1><i class="fas fa-microphone-alt"></i>Nech1st1k19 Files</h1>
+            <p>Нажмите, чтобы узнать его</p>
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Поиск по названию..." />
+            </div>
+            <div class="control-buttons">
+                <button class="btn btn-random" id="randomBtn">
+                    <i class="fas fa-dice"></i> Случайно
+                </button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="all">Все <span id="allCount">(0)</span></button>
+            <button class="tab" data-tab="favorites">⭐ Избранное <span id="favCount">(0)</span></button>
+        </div>
+
+        <div id="allTab" class="tab-content active">
+            <div class="voice-grid" id="allButtons">
+                <!-- Кнопки будут добавлены автоматически -->
+            </div>
+        </div>
+
+        <div id="favoritesTab" class="tab-content">
+            <div class="voice-grid" id="favoriteButtons">
+                <div class="empty-state">
+                    <i class="fas fa-star"></i>
+                    <p>Нет избранных голосовых</p>
+                    <p style="font-size: 13px; margin-top: 8px;">Добавь в избранное, нажав на ⭐</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="player-container">
+            <div class="player-header">
+                <div class="now-playing" id="nowPlaying">Ничего не воспроизводится</div>
+                <button class="btn btn-favorite btn-sm" id="addToFavorite" style="padding: 8px 12px; font-size: 13px;">
+                    <i class="far fa-star"></i> В избранное
+                </button>
+            </div>
+            <audio id="audioPlayer" controls></audio>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalStat">0</div>
+                <div class="stat-label">Всего</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="playedStat">0</div>
+                <div class="stat-label">Прослушано</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="favoriteStat">0</div>
+                <div class="stat-label">В избранном</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">Добавлено в избранное!</div>
+
+    <script>
+        // Конфигурация
+        const config = {
+            maxFiles: 50, // Максимальное количество файлов для проверки
+            captions: [
+                'Хохлина', 'Минусов не вижу', 'Газом их',
+                'Совет другу 💡', 'Песня 🎵', 'Разговор о жизни 🌱',
+                'Мотивация 💪', 'Прощание 👋', 'Случайная фраза 🎲',
+                'Любимая цитата ✨', 'История из детства 👶', 'Рецепт 🍳',
+                'Анекдот 🤣', 'Философия 🧠', 'Планы на будущее 🔮',
+                'История о друзьях 👥', 'Рассказ о работе 💼', 'Путешествие ✈️',
+                'Мечта 🌙', 'Совет по жизни 💎', 'История любви ❤️',
+                'Разговор с родителями 👨‍👩‍👧', 'Новость дня 📰', 'Пожелание 🌟',
+                'Размышление 🤔', 'История успеха 🏆', 'Секрет 🤫',
+                'Воспоминание 📸', 'Мудрость 🦉', 'Шутка 🎭'
+            ]
+        };
+
+        // Глобальные переменные
+        let voiceFiles = [];
+        let currentPlaying = null;
+        let favorites = JSON.parse(localStorage.getItem('voiceFavorites')) || [];
+        let playedCount = parseInt(localStorage.getItem('voicePlayedCount')) || 0;
+
+        // DOM элементы
+        const audioPlayer = document.getElementById('audioPlayer');
+        const allButtonsContainer = document.getElementById('allButtons');
+        const favoriteButtonsContainer = document.getElementById('favoriteButtons');
+        const searchInput = document.getElementById('searchInput');
+        const randomBtn = document.getElementById('randomBtn');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const addToFavoriteBtn = document.getElementById('addToFavorite');
+        const nowPlayingEl = document.getElementById('nowPlaying');
+        const notificationEl = document.getElementById('notification');
+
+        // Инициализация
+        window.addEventListener('load', initApp);
+
+        function initApp() {
+            loadVoiceFiles();
+            setupEventListeners();
+            updateStats();
+        }
+
+        // Загрузка аудиофайлов
+        function loadVoiceFiles() {
+            voiceFiles = [];
+            allButtonsContainer.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Загрузка...</p></div>';
+
+            const promises = [];
+
+            for (let i = 1; i <= config.maxFiles; i++) {
+                const audioFile = `voice${i}.mp3`;
+                const promise = checkFileExists(audioFile).then(exists => {
+                    if (exists) {
+                        voiceFiles.push({
+                            id: i,
+                            file: audioFile,
+                            caption: config.captions[i - 1] || `Сообщение ${i}`,
+                            isFavorite: favorites.includes(i)
+                        });
+                    }
+                });
+                promises.push(promise);
+            }
+
+            Promise.all(promises).then(() => {
+                if (voiceFiles.length === 0) {
+                    allButtonsContainer.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>Нет голосовых сообщений</p>
+                            <p style="font-size: 13px; margin-top: 8px;">
+                                Добавь файлы voice1.mp3, voice2.mp3 и т.д.
+                            </p>
+                        </div>
+                    `;
+                } else {
+                    renderAllButtons();
+                    renderFavoriteButtons();
+                }
+                updateCounts();
+            });
+        }
+
+        // Проверка существования файла
+        function checkFileExists(file) {
+            return new Promise((resolve) => {
+                const testAudio = new Audio(file);
+                let resolved = false;
+
+                testAudio.addEventListener('canplaythrough', () => {
+                    if (!resolved) {
+                        resolved = true;
+                        resolve(true);
+                    }
+                }, { once: true });
+
+                testAudio.addEventListener('error', () => {
+                    if (!resolved) {
+                        resolved = true;
+                        resolve(false);
+                    }
+                }, { once: true });
+
+                setTimeout(() => {
+                    if (!resolved) {
+                        resolved = true;
+                        resolve(false);
+                    }
+                }, 2000);
+
+                testAudio.load();
+            });
+        }
+
+        // Рендер кнопок
+        function renderAllButtons() {
+            allButtonsContainer.innerHTML = '';
+            const filteredFiles = filterFiles(voiceFiles);
+            
+            if (filteredFiles.length === 0) {
+                allButtonsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <p>Ничего не найдено</p>
+                        <p style="font-size: 13px; margin-top: 8px;">
+                            Попробуй изменить запрос
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            filteredFiles.forEach(file => {
+                const button = createVoiceButton(file);
+                allButtonsContainer.appendChild(button);
+            });
+        }
+
+        function renderFavoriteButtons() {
+            favoriteButtonsContainer.innerHTML = '';
+            const favoriteFiles = voiceFiles.filter(f => f.isFavorite);
+            
+            if (favoriteFiles.length === 0) {
+                favoriteButtonsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-star"></i>
+                        <p>Нет избранных голосовых</p>
+                        <p style="font-size: 13px; margin-top: 8px;">
+                            Добавь в избранное, нажав на ⭐
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            favoriteFiles.forEach(file => {
+                const button = createVoiceButton(file);
+                favoriteButtonsContainer.appendChild(button);
+            });
+        }
+
+        function createVoiceButton(file) {
+            const button = document.createElement('button');
+            button.className = `voice-button ${file.isFavorite ? 'favorite' : ''} ${currentPlaying === file.id ? 'playing' : ''}`;
+            button.innerHTML = `
+                <i class="fas ${file.isFavorite ? 'fa-star' : 'fa-microphone-alt'}"></i>
+                <span>${file.caption}</span>
+                ${file.isFavorite ? '<small style="font-size: 10px; margin-top: 4px;">⭐</small>' : ''}
+            `;
+            button.dataset.id = file.id;
+            button.dataset.file = file.file;
+            
+            button.addEventListener('click', () => playAudio(file));
+            return button;
+        }
+
+        // Воспроизведение аудио
+        function playAudio(file) {
+            // Останавливаем предыдущее воспроизведение
+            if (currentPlaying) {
+                document.querySelectorAll(`.voice-button[data-id="${currentPlaying}"]`)
+                    .forEach(btn => btn.classList.remove('playing'));
+            }
+
+            // Обновляем состояние
+            currentPlaying = file.id;
+            nowPlayingEl.textContent = `▶️ ${file.caption}`;
+
+            // Обновляем кнопки
+            document.querySelectorAll(`.voice-button[data-id="${file.id}"]`)
+                .forEach(btn => {
+                    btn.classList.add('playing');
+                    btn.innerHTML = `
+                        <i class="fas fa-play-circle"></i>
+                        <span>${file.caption}</span>
+                        ${file.isFavorite ? '<small style="font-size: 10px; margin-top: 4px;">⭐</small>' : ''}
+                    `;
+                });
+
+            // Воспроизводим
+            audioPlayer.src = file.file;
+            audioPlayer.play();
+
+            // Счётчик прослушиваний
+            if (!audioPlayer.dataset.counted) {
+                playedCount++;
+                localStorage.setItem('voicePlayedCount', playedCount);
+                audioPlayer.dataset.counted = 'true';
+                updateStats();
+            }
+
+            // Обработка окончания
+            audioPlayer.onended = () => {
+                document.querySelectorAll(`.voice-button[data-id="${file.id}"]`)
+                    .forEach(btn => {
+                        btn.classList.remove('playing');
+                        btn.innerHTML = `
+                            <i class="fas ${file.isFavorite ? 'fa-star' : 'fa-microphone-alt'}"></i>
+                            <span>${file.caption}</span>
+                            ${file.isFavorite ? '<small style="font-size: 10px; margin-top: 4px;">⭐</small>' : ''}
+                        `;
+                    });
+                currentPlaying = null;
+                nowPlayingEl.textContent = 'Ничего не воспроизводится';
+                audioPlayer.dataset.counted = '';
+            };
+        }
+
+        // Случайное воспроизведение
+        function playRandom() {
+            if (voiceFiles.length === 0) {
+                showNotification('Нет доступных голосовых!');
+                return;
+            }
+            
+            const randomFile = voiceFiles[Math.floor(Math.random() * voiceFiles.length)];
+            playAudio(randomFile);
+            showNotification(`🎲 Случайный выбор: ${randomFile.caption}`);
+        }
+
+        // Добавление/удаление из избранного
+        function toggleFavorite(fileId) {
+            const index = favorites.indexOf(fileId);
+            const file = voiceFiles.find(f => f.id === fileId);
+            
+            if (index === -1) {
+                favorites.push(fileId);
+                if (file) file.isFavorite = true;
+                showNotification('⭐ Добавлено в избранное!');
+            } else {
+                favorites.splice(index, 1);
+                if (file) file.isFavorite = false;
+                showNotification('Удалено из избранного');
+            }
+            
+            localStorage.setItem('voiceFavorites', JSON.stringify(favorites));
+            renderAllButtons();
+            renderFavoriteButtons();
+            updateCounts();
+            updateStats();
+        }
+
+        // Фильтрация по поиску
+        function filterFiles(files) {
+            const query = searchInput.value.toLowerCase().trim();
+            if (!query) return files;
+            
+            return files.filter(file => 
+                file.caption.toLowerCase().includes(query)
+            );
+        }
+
+        // Обновление счётчиков
+        function updateCounts() {
+            const allCount = document.getElementById('allCount');
+            const favCount = document.getElementById('favCount');
+            
+            allCount.textContent = `(${voiceFiles.length})`;
+            favCount.textContent = `(${favorites.length})`;
+        }
+
+        function updateStats() {
+            document.getElementById('totalStat').textContent = voiceFiles.length;
+            document.getElementById('playedStat').textContent = playedCount;
+            document.getElementById('favoriteStat').textContent = favorites.length;
+        }
+
+        // Уведомления
+        function showNotification(message) {
+            notificationEl.textContent = message;
+            notificationEl.classList.add('show');
+            
+            setTimeout(() => {
+                notificationEl.classList.remove('show');
+            }, 2500);
+        }
+
+        // Обработчики событий
+        function setupEventListeners() {
+            // Поиск
+            searchInput.addEventListener('input', () => {
+                renderAllButtons();
+            });
+
+            // Случайное воспроизведение
+            randomBtn.addEventListener('click', playRandom);
+
+            // Табы
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    document.getElementById(`${tab.dataset.tab}Tab`).classList.add('active');
+                });
+            });
+
+            // Добавление текущего в избранное
+            addToFavoriteBtn.addEventListener('click', () => {
+                if (currentPlaying) {
+                    toggleFavorite(currentPlaying);
+                } else {
+                    showNotification('Сначала выбери голосовое!');
+                }
+            });
+
+            // Добавление в избранное через ПКМ на кнопке
+            document.addEventListener('contextmenu', (e) => {
+                if (e.target.closest('.voice-button')) {
+                    e.preventDefault();
+                    const btn = e.target.closest('.voice-button');
+                    const fileId = parseInt(btn.dataset.id);
+                    toggleFavorite(fileId);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
